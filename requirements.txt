@@ -1,0 +1,6 @@
+scrapling[all]
+kuzu
+pandas
+polars
+python-dotenv
+openai
