@@ -1,48 +1,28 @@
-import json
-from S.O.M.I.S.agents.scraper import NewsScraper
-from S.O.M.I.S.agents.extractor import ExtractorAgent
-from S.O.M.I.S.database.graph import GraphDatabase
-from S.O.M.I.S.models.llm import LocalLLM
-from S.O.M.I.S.utils.logger import log
+from agents.swarm import SomisSwarm, DUMMY_FEED
+import time
 
-def main():
-    log("Orchestrator", "Initializing S.O.M.I.S Autonomous Swarm...")
+def run_hackathon_demo():
+    print("="*60)
+    print(" S.O.M.I.S: ALPHA-GRAPH HACKATHON DEMO STARTING...")
+    print("="*60)
     
-    # Initialize components
-    db = GraphDatabase()
-    llm = LocalLLM()
-    scraper = NewsScraper()
-    extractor = ExtractorAgent(llm)
+    swarm = SomisSwarm()
     
-    # Step 1: Scrape news
-    url = "https://www.reuters.com/business/" # Example URL
-    log("Scraper", f"Fetching news from {url}...")
-    try:
-        content = scraper.scrape(url)
-        log("Scraper", f"Successfully fetched {len(content)} characters of content.")
-    except Exception as e:
-        log("Scraper", f"Error fetching news: {e}")
-        return
-
-    # Step 2: Extract entities (Using a portion of the content to avoid context limits)
-    log("Extractor", "Extracting entities from fetched content...")
-    sample_text = content[:2000] # Just a sample for now
-    entities = extractor.extract_entities(sample_text)
-    log("Extractor", f"Extracted entities: {json.dumps(entities, indent=2)}")
-
-    # Step 3: Store in Graph Database
-    log("Database", "Storing entities and mapping relationships...")
-    
-    # Simple logic to add extracted companies to the graph
-    for company_name in entities.get("companies", []):
+    for news_item in DUMMY_FEED:
+        print(f"\n[FEED INGESTED]: {news_item['news']}")
+        print("-" * 20)
+        
         try:
-            db.query(f"CREATE (:Company {{name: '{company_name}', industry: 'Unknown'}})")
-            log("Database", f"Added Company: {company_name}")
+            # Note: This will attempt to connect to KoboldCpp at http://localhost:5001/v1
+            # Ensure KoboldCpp is running before execution.
+            result = swarm.process_news(news_item['news'])
+            print(f"\n[SWARM OUTPUT]:\n{result}")
         except Exception as e:
-            if "already exists" not in str(e).lower():
-                log("Database", f"Error adding company {company_name}: {e}")
-
-    log("Orchestrator", "Swarm cycle completed.")
+            print(f"\n[ERROR]: Swarm execution failed. Ensure KoboldCpp is running.")
+            print(f"Details: {e}")
+        
+        print("-" * 60)
+        time.sleep(2)  # Pause for effect in demo
 
 if __name__ == "__main__":
-    main()
+    run_hackathon_demo()
