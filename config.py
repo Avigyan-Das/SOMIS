@@ -1,18 +1,18 @@
 import os
-from langchain_openai import ChatOpenAI
+from crewai import LLM
 
 # LLM Configuration for KoboldCpp
 # pointing to the local OpenAI-compatible endpoint
-def get_llm(model_name="local-model"):
+def get_llm(model_name="phi-3.5-mini-instruct"):
     """
-    Returns a LangChain ChatOpenAI object configured for KoboldCpp.
-    Default port for KoboldCpp is often 5001 or 8000.
+    Returns a crewai LLM object configured for KoboldCpp.
+    Default port for KoboldCpp is 5001.
     """
-    return ChatOpenAI(
+    return LLM(
+        model=f"openai/{model_name}",
         base_url="http://localhost:5001/v1",
-        api_key="sk-dummy-key-for-framework-validation",
-        model=model_name,
-        temperature=0.2
+        api_key="sk-dummy-key",
+        temperature=0.1
     )
 
 # System Paths

@@ -14,6 +14,26 @@ class BaseScraper:
         page = self.fetcher.get(url, follow_redirects=True)
         return page.text
 
+    def get_article_content(self, url: str) -> str:
+        """Generic method to extract text from a page."""
+        try:
+            page = self.fetcher.get(url)
+            # Find the main article body - heuristic approach
+            # Most news sites use <article> or divs with certain classes
+            article = page.css('article')
+            if article:
+                return article[0].get_all_text().strip()
+            
+            # Fallback to a common content div
+            content = page.css('div.ArticleBody-articleBody, div.article-body, div.story-body')
+            if content:
+                return content[0].get_all_text().strip()
+            
+            return page.text[:2000] # Return some text as fallback
+        except Exception as e:
+            print(f"Error fetching content from {url}: {e}")
+            return ""
+
 class CNBCScraper(BaseScraper):
     def get_business_news(self) -> List[Dict[str, str]]:
         """Extracts business news headlines from CNBC."""

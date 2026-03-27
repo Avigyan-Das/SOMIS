@@ -42,8 +42,56 @@ class AlphaGraph:
             ("LG Energy", "NIO", "SUPPLIES_TO"),
             ("Neon Gas", "TSMC", "REQUIRED_BY"),
             ("TSMC", "Tesla", "SUPPLIES_TO"),
-            ("TSMC", "NIO", "SUPPLIES_TO")
+            ("TSMC", "NIO", "SUPPLIES_TO"),
+            # Indian Market Connections
+            ("Lithium", "Reliance Industries", "REFINES_LITHIUM"),
+            ("Reliance Industries", "Tata Motors", "SUPPLIES_ENERGY"),
+            ("Nickel", "Vedanta", "MINED_BY"),
+            ("Vedanta", "Tata Motors", "SUPPLIES_TO"),
+            ("TSMC", "Mahindra & Mahindra", "SUPPLIES_CHIPS"),
+            ("Mahindra & Mahindra", "Apollo Tyres", "CONSUMES"),
+            ("Tata Motors", "Motherson Sumi", "PARTS_SUPPLIER"),
+            ("Mahindra & Mahindra", "Motherson Sumi", "PARTS_SUPPLIER"),
+            ("Tata Motors", "Tata Steel", "USES_STEEL"),
+            ("Tata Steel", "Tata Motors", "SUPPLIES_TO"),
+            ("Nickel", "Jindal Stainless", "USES_NICKEL"),
+            ("Jindal Stainless", "Tata Motors", "SUPPLIES_TO"),
+            # New Agri & Consumer Ripples
+            ("Natural Gas", "UPL", "RAW_MATERIAL"),
+            ("Natural Gas", "Coromandel International", "RAW_MATERIAL"),
+            ("UPL", "Agri Sector", "PROVIDES_INPUTS"),
+            ("Coromandel International", "Agri Sector", "PROVIDES_INPUTS"),
+            ("Agri Sector", "Hindustan Unilever", "SUPPLIES_RAW_MATERIALS"),
+            ("Agri Sector", "ITC", "SUPPLIES_RAW_MATERIALS"),
+            ("Hindustan Unilever", "Varun Beverages", "DISTRIBUTION_PARTNER"),
+            # Banking & Macro Ripples
+            ("Interest Rates", "HDFC Bank", "IMPACTS_MARGINS"),
+            ("Interest Rates", "Bajaj Finance", "IMPACTS_LENDING"),
+            ("Bajaj Finance", "Consumer Spending", "ENABLES"),
+            ("Consumer Spending", "Titan", "DRIVES_SALES"),
+            ("Consumer Spending", "Trent", "DRIVES_SALES")
         ]
+
+        # Add some macro nodes to ensure they exist
+        macro_nodes = [
+            ("Natural Gas", "Commodity"),
+            ("Interest Rates", "Macro"),
+            ("UPL", "Company"),
+            ("Coromandel International", "Company"),
+            ("Hindustan Unilever", "Company"),
+            ("ITC", "Company"),
+            ("HDFC Bank", "Company"),
+            ("Bajaj Finance", "Company"),
+            ("Titan", "Company"),
+            ("Trent", "Company"),
+            ("Varun Beverages", "Company"),
+            ("Agri Sector", "Sector"),
+            ("Consumer Spending", "Economic Indicator")
+        ]
+        
+        for name, ntype in macro_nodes:
+            if name not in self.G:
+                self.G.add_node(name, type=ntype, impact=0.0)
 
         for u, v, rel in relationships:
             self.G.add_edge(u, v, relationship=rel)
