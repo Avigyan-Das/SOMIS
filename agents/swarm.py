@@ -5,11 +5,11 @@ from tools.graph_tool import GraphTools
 from tools.scraper_tool import ScraperTools
 import json
 
-# Initialize Local LLM
-local_llm = get_llm()
-
 class SomisSwarm:
     def __init__(self):
+        # Initialize LLM (Picks up Groq if key present, else local)
+        self.llm = get_llm()
+        
         # 1. The Harvester Agent (Data Extraction)
         self.harvester = Agent(
             role='Senior Financial Data Harvester',
@@ -19,7 +19,7 @@ class SomisSwarm:
             verbose=True,
             allow_delegation=False,
             tools=[ScraperTools.fetch_article_content],
-            llm=local_llm
+            llm=self.llm
         )
 
         # 2. The Knowledge Graph Architect (The Architect)
@@ -31,7 +31,7 @@ class SomisSwarm:
             verbose=True,
             allow_delegation=False,
             tools=[GraphTools.update_graph_node, GraphTools.get_downstream_impact],
-            llm=local_llm
+            llm=self.llm
         )
 
         # 3. The Ripple Agent (The Money Maker / Alpha Generator)
@@ -44,7 +44,7 @@ class SomisSwarm:
             verbose=True,
             allow_delegation=True,
             tools=[GraphTools.get_second_order_impact],
-            llm=local_llm
+            llm=self.llm
         )
 
     def process_news(self, news_text):

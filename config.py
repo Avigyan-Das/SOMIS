@@ -11,20 +11,18 @@ def get_llm(model_name="phi-3.5-mini-instruct"):
     import os
     groq_key = os.getenv("GROQ_API_KEY")
     
-    # Priority 1: Use Groq if key is present (Best for judges/online demo)
+    # Priority 1: Use Groq if key is present (Verified CrewAI format)
     if groq_key:
         return LLM(
             model="groq/llama-3.3-70b-versatile",
-            api_key=groq_key,
-            temperature=0.1
+            api_key=groq_key
         )
     
     # Priority 2: Standard Local Setup
     return LLM(
         model=f"openai/{model_name}",
         base_url="http://localhost:5001/v1",
-        api_key="sk-dummy-key",
-        temperature=0.1
+        api_key="sk-dummy-key"
     )
 
 # System Paths
