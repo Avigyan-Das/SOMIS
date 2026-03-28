@@ -18,24 +18,36 @@ S.O.M.I.S is a multi-agent autonomous system designed to identify non-obvious tr
 
 ---
 
-## 🚀 Quick Start (Local Setup)
+## 🚀 Quick Start & Demo (For Judges)
 
-### 1. Prerequisites
-- Python 3.13+
-- Node.js & npm
-- KoboldCpp (for local LLM inference)
+### 1. Zero-Setup Cloud Demo (Recommended)
+The fastest way to experience the **S.O.M.I.S** swarm is via Google Colab. This automatically sets up the local LLM environment on Google's hardware.
+- Open **[SOMIS_JUDGE_LAUNCHER.ipynb](./SOMIS_JUDGE_LAUNCHER.ipynb)** in this repository.
+- Click the **"Open in Colab"** badge at the top.
+- Select `Runtime` -> `Run all`.
 
-### 2. Launching "The Brain" (KoboldCpp)
-1. Run `koboldcpp.exe` with the **Phi-3.5-Mini-Instruct** GGUF model.
-2. Ensure the **Port** is set to `5001`.
-3. Check **"Use API"** and launch.
+---
 
-### 3. Automated System Launch
-Simply run the root batch file:
+### 2. Manual Local Setup
+If you prefer to run the system on your own hardware (Requires 16GB RAM + GPU recommended):
+
+#### **A. Launch "The Brain" (KoboldCpp)**
+1. Download `koboldcpp.exe` and the **Phi-3.5-Mini-Instruct** GGUF model.
+2. Launch the model on **Port 5001** with the `--api` flag enabled.
+3. Ensure the model is fully loaded before starting the backend.
+
+#### **B. Start Backend (Command Center)**
 ```bash
-./LAUNCH_SOMIS.bat
+python server.py
 ```
-*This will automatically start the Backend, Frontend, and open your browser to the Tactical Terminal (http://localhost:5173).*
+
+#### **C. Start Frontend (Tactical Terminal)**
+```bash
+cd frontend
+npm install
+npm run dev
+```
+*The dashboard will be available at http://localhost:5173.*
 
 ---
 
