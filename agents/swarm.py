@@ -13,9 +13,9 @@ class SomisSwarm:
         # 1. The Harvester Agent (Data Extraction)
         self.harvester = Agent(
             role='Senior Financial Data Harvester',
-            goal='Extract structured entities, tickers, and impact scores from news. Focus on Indian and Global markets.',
-            backstory="""You are a specialist in corporate intelligence. You parse news into clean JSON-like entities. 
-            You identify the primary company or commodity mentioned and assign a score (-1.0 to 1.0).""",
+            goal='Extract entities and impact scores from news text. Use tools ONLY if external data is missing.',
+            backstory="""You are a specialist in corporate intelligence. You parse news into clean summaries. 
+            You identify the primary company or commodity and assign a score (-1.0 to 1.0).""",
             verbose=True,
             allow_delegation=False,
             tools=[ScraperTools.fetch_article_content],
@@ -25,25 +25,23 @@ class SomisSwarm:
         # 2. The Knowledge Graph Architect (The Architect)
         self.architect = Agent(
             role='Knowledge Graph Architect',
-            goal='Update the supply chain graph and identify immediate downstream victims or beneficiaries.',
+            goal='Update the supply chain graph and identify 1st-order impacts.',
             backstory="""You are a supply chain expert. You use tools to update node status and 
-            report who is directly connected to the affected entity (1st-order impact).""",
+            report who is directly connected to the affected entity.""",
             verbose=True,
             allow_delegation=False,
             tools=[GraphTools.update_graph_node, GraphTools.get_downstream_impact],
             llm=self.llm
         )
 
-        # 3. The Ripple Agent (The Money Maker / Alpha Generator)
+        # 3. The Ripple Agent (The Alpha Generator)
         self.ripple_agent = Agent(
             role='Second-Order Impact Analyst',
-            goal='Identify non-obvious trade opportunities by tracing 2nd-order ripples.',
-            backstory="""You are a master of indirect logic. If gas prices rise, you look at fertilizer makers' customers. 
-            If Lithium mining halts, you look at the car makers' competitors or tire suppliers. 
-            You always provide a 'Reasoning Chain' for your alpha alerts.""",
+            goal='Identify 2nd-order trade opportunities. Do not rely on tools if reasoning is possible directly.',
+            backstory="""You are a master of indirect logic. Tracing ripples from 1st-order victims 
+            to 2nd-order beneficiaries. Always provide a 'Reasoning Chain'.""",
             verbose=True,
-            allow_delegation=True,
-            tools=[GraphTools.get_second_order_impact],
+            allow_delegation=False,
             llm=self.llm
         )
 
