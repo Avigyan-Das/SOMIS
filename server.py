@@ -7,6 +7,10 @@ import uvicorn
 import asyncio
 import random
 from typing import List, Dict
+from dotenv import load_dotenv
+
+# Load API keys from .env file
+load_dotenv()
 
 app = FastAPI(title="S.O.M.I.S Tactical API")
 
@@ -112,20 +116,29 @@ async def analyze_news(news_item: Dict):
     
     # Pre-check: Is LLM reachable?
     import httpx
+    import os
+    groq_active = bool(os.getenv("GROQ_API_KEY"))
+    
     try:
         async with httpx.AsyncClient() as client:
             test_res = await client.get("http://localhost:5001/v1/models", timeout=2.0)
             if test_res.status_code == 200:
-                swarm_logs.append(f"> [System] PHI-3.5 Reachable. Initializing Swarm Logic...")
+                swarm_logs.append(f"> [System] PHI-3.5 Reachable. Local Brain Active.")
+                engine_type = "PHI-3.5"
             else:
-                swarm_logs.append(f"> [System] PHI-3.5 API error ({test_res.status_code}). Check KoboldCpp.")
+                raise Exception("Local Offline")
     except Exception:
-        swarm_logs.append(f"> [System] PHI-3.5 OFFLINE. Localhost:5001 Connection Refused.")
+        if groq_active:
+            swarm_logs.append(f"> [System] Local Brain Offline. Switching to Cloud Fallback (Groq)...")
+            engine_type = "GROQ/LLAMA-3"
+        else:
+            swarm_logs.append(f"> [System] PHI-3.5 OFFLINE. No Cloud Fallback configured.")
+            engine_type = "UNKNOWN"
 
-    swarm_logs.append(f"> [Swarm] Local LLM Deep Reasoning Initiated (Phi-3.5)...")
+    swarm_logs.append(f"> [Swarm] Multi-Agent Intelligence Swarm Initiated ({engine_type})...")
     
     try:
-        # Wait indefinitely for the local LLM to finish (no heuristic fallback)
+        # Wait indefinitely for the model to finish
         result = await asyncio.to_thread(swarm.process_news, text)
         ripple_text = str(result)
         
