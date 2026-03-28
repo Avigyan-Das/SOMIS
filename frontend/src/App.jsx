@@ -196,7 +196,7 @@ const DetailModal = ({ isOpen, onClose, alert }) => {
                   <Zap size={18} />
                   <span className="text-sm font-black uppercase tracking-[0.2em]">Second-Order Reasoning Chain</span>
                </div>
-               <div className="bg-[#FFB00008] border-l-4 border-[#FFB000] p-6 font-mono text-xs leading-relaxed text-white relative">
+               <div className="bg-[#FFB00008] border-l-4 border-[#FFB000] p-6 font-mono text-xs leading-relaxed text-white relative max-h-[400px] overflow-y-auto scroll-custom">
                   <div className="absolute top-2 right-4 text-[8px] opacity-30 font-bold uppercase tracking-widest">Thought_Log_Verified</div>
                   {alert.ripple.split('->').map((step, idx) => (
                     <div key={idx} className="mb-3 flex gap-4 items-start">
