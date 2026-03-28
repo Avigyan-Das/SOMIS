@@ -69,11 +69,13 @@ class SomisSwarm:
         # Task 3: Ripple Analysis & Trade Alert
         ripple_task = Task(
             description="""Analyze the second-order impacts of this event. 
-            Identify a company that is not directly mentioned but is linked via the 
-            supply chain (e.g., if Lithium is affected, look at battery makers' customers). 
-            Generate an 'Opportunity Radar Alert' with a clear reasoning chain and ticker if available.""",
+            Identify a specific company (and its ticker) that is not directly mentioned but is linked via the 
+            supply chain. 
+            Generate an 'Opportunity Radar Alert' with a clear step-by-step reasoning chain 
+            (use '->' as a separator).
+            IMPORTANT: End your response with 'FINAL_TICKER: [TICKER]' (e.g., FINAL_TICKER: TATAMOTORS).""",
             agent=self.ripple_agent,
-            expected_output="A detailed Alpha Alert with a multi-step reasoning chain and a clear recommendation."
+            expected_output="A detailed Alpha Alert with a multi-step reasoning chain and the final identified ticker."
         )
 
         # Execute Swarm

@@ -12,7 +12,7 @@
 
 @layer base {
   body {
-    @apply bg-obsidian text-amber font-mono overflow-hidden m-0 cursor-crosshair;
+    @apply bg-obsidian text-amber font-mono overflow-y-auto m-0 cursor-crosshair;
   }
 }
 

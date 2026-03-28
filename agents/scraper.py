@@ -67,33 +67,90 @@ class CNBCScraper(BaseScraper):
             print(f"Error scraping CNBC: {e}")
             return []
 
-class ReutersScraper(BaseScraper):
+class ETScraper(BaseScraper):
     def get_business_news(self) -> List[Dict[str, str]]:
-        """Extracts business news headlines from Reuters."""
-        url = "https://www.reuters.com/business/"
+        """Extracts business news headlines from The Economic Times."""
+        url = "https://economictimes.indiatimes.com/news/economy"
         try:
-            # We add a common User-Agent and referer to help with some blocks
-            # though Scrapling's Fetcher usually does its own thing.
             page = self.fetcher.get(url)
-            
             if page.status != 200:
-                print(f"Warning: Reuters returned status {page.status}")
+                print(f"Warning: ET returned status {page.status}")
                 return []
 
             articles = []
-            links = page.css('a[data-testid="Heading"], a[class*="Heading"]')
+            # Try multiple common selectors for ET
+            links = page.css('a[href*="/articleshow/"]')
             
             for link in links:
                 title = link.get_all_text().strip()
                 href = link.attrib.get('href')
-                if title and href and len(title) > 10:
+                if title and href and len(title) > 25:
+                    if not href.startswith('http'):
+                        href = f"https://economictimes.indiatimes.com{href}"
+                    # Avoid duplicates and non-news links
+                    if not any(a['title'] == title for a in articles):
+                        articles.append({
+                            "title": title,
+                            "link": href,
+                            "source": "Economic Times"
+                        })
+                    if len(articles) >= 15:
+                        break
+            
+            # Fallback if specific selectors fail
+            if not articles:
+                all_links = page.css('a')
+                for link in all_links:
+                    title = link.get_all_text().strip()
+                    href = link.attrib.get('href', '')
+                    if '/articleshow/' in href and len(title) > 30:
+                        if not href.startswith('http'):
+                            href = f"https://economictimes.indiatimes.com{href}"
+                        articles.append({
+                            "title": title,
+                            "link": href,
+                            "source": "Economic Times"
+                        })
+                        if len(articles) >= 10: break
+
+            return articles
+        except Exception as e:
+            print(f"Error scraping Economic Times: {e}")
+            return []
+
+class ReutersScraper(BaseScraper):
+    def get_business_news(self) -> List[Dict[str, str]]:
+        """Extracts business news headlines from Reuters."""
+        # Using the business news feed which is often more stable
+        url = "https://www.reuters.com/business/"
+        try:
+            # Scrapling's Fetcher handles many things, but Reuters is tough
+            page = self.fetcher.get(url)
+            
+            if page.status != 200:
+                print(f"Warning: Reuters returned status {page.status}. Trying Market feed...")
+                page = self.fetcher.get("https://www.reuters.com/markets/")
+            
+            if page.status != 200:
+                return []
+
+            articles = []
+            # Reuters uses data-testid for headings frequently
+            links = page.css('a[data-testid="Heading"], a[class*="Heading"], a[href*="/business/"], a[href*="/markets/"]')
+            
+            for link in links:
+                title = link.get_all_text().strip()
+                href = link.attrib.get('href')
+                if title and href and len(title) > 20:
                     if not href.startswith('http'):
                         href = f"https://www.reuters.com{href}"
-                    articles.append({
-                        "title": title,
-                        "link": href,
-                        "source": "Reuters"
-                    })
+                    
+                    if not any(a['title'] == title for a in articles):
+                        articles.append({
+                            "title": title,
+                            "link": href,
+                            "source": "Reuters"
+                        })
                     if len(articles) >= 10:
                         break
             return articles
