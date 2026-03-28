@@ -31,7 +31,6 @@ app.add_middleware(
 reuters = ReutersScraper()
 cnbc = CNBCScraper()
 et = ETScraper()
-swarm = SomisSwarm()
 
 # Demo ripple logic for reliability
 DEMO_RIPPLES = {
@@ -47,7 +46,10 @@ DEMO_RIPPLES = {
 async def get_news():
     """Endpoint for the Tactical Terminal's Live Intel stream."""
     try:
-        # Fetch news from multiple sources with individual error handling
+        # Step 1: Decay the graph impacts (The 'Life' factor)
+        market_graph.decay_impacts()
+        
+        # Step 2: Fetch news from multiple sources
         async def fetch_source(scraper_func, source_name):
             try:
                 # Add a timeout to each scraper to prevent hanging
@@ -114,32 +116,16 @@ async def analyze_news(news_item: Dict):
     swarm_logs.append(f"> [Harvester] Ingesting intel: {text[:40]}...")
     swarm_logs.append(f"> [Architect] Cross-referencing NetworkX Supply Chain...")
     
-    # Pre-check: Is LLM reachable?
-    import httpx
-    import os
-    groq_active = bool(os.getenv("GROQ_API_KEY"))
+    # Initialize a FRESH swarm object to pick the best brain right now
+    local_swarm = SomisSwarm()
+    engine_name = local_swarm.engine_type
     
-    try:
-        async with httpx.AsyncClient() as client:
-            test_res = await client.get("http://localhost:5001/v1/models", timeout=2.0)
-            if test_res.status_code == 200:
-                swarm_logs.append(f"> [System] PHI-3.5 Reachable. Local Brain Active.")
-                engine_type = "PHI-3.5"
-            else:
-                raise Exception("Local Offline")
-    except Exception:
-        if groq_active:
-            swarm_logs.append(f"> [System] Local Brain Offline. Switching to Cloud Fallback (Groq)...")
-            engine_type = "GROQ/LLAMA-3"
-        else:
-            swarm_logs.append(f"> [System] PHI-3.5 OFFLINE. No Cloud Fallback configured.")
-            engine_type = "UNKNOWN"
-
-    swarm_logs.append(f"> [Swarm] Multi-Agent Intelligence Swarm Initiated ({engine_type})...")
+    swarm_logs.append(f"> [System] Brain identified: {engine_name}. Initializing Swarm Logic...")
+    swarm_logs.append(f"> [Swarm] Multi-Agent Intelligence Swarm Initiated...")
     
     try:
         # Wait indefinitely for the model to finish
-        result = await asyncio.to_thread(swarm.process_news, text)
+        result = await asyncio.to_thread(local_swarm.process_news, text)
         ripple_text = str(result)
         
         # Improved Ticker Extraction
@@ -155,8 +141,7 @@ async def analyze_news(news_item: Dict):
             valid = [t for t in potential_tickers if t not in ignore]
             ticker = valid[0] if valid else "TACTICAL_HEDGE"
         
-        engine_type = "PHI-3.5"
-        swarm_logs.append(f"> [System] PHI-3.5 Reasoning Complete. Identified: {ticker}")
+        swarm_logs.append(f"> [System] {engine_name} Reasoning Complete. Identified: {ticker}")
 
         # Update alerts with dynamic conviction
         import random
@@ -168,7 +153,7 @@ async def analyze_news(news_item: Dict):
             "ticker": ticker,
             "conviction": conviction_score,
             "ripple": ripple_text,
-            "engine": engine_type,
+            "engine": engine_name,
             "stance": "STRONG_BUY" if conviction_score > 85 else "ACCUMULATE",
             "timeframe": "IMMEDIATE" if conviction_score > 90 else "24-48H"
         }

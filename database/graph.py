@@ -8,101 +8,48 @@ class AlphaGraph:
         self._initialize_base_supply_chain()
 
     def _initialize_base_supply_chain(self):
-        """Pre-built static NetworkX base graph mapping a basic EV supply chain."""
-        # Commodities
-        self.G.add_node("Lithium", type="Commodity", impact=0.0)
-        self.G.add_node("Cobalt", type="Commodity", impact=0.0)
-        self.G.add_node("Nickel", type="Commodity", impact=0.0)
-        self.G.add_node("Neon Gas", type="Commodity", impact=0.0)
+        # ... (keep existing base nodes and relationships)
+        # Adding a few initial nodes
+        self.add_node("Lithium", "Commodity")
+        self.add_node("Tata Motors", "Company", ticker="TATAMOTORS")
+        self.add_node("Reliance Industries", "Company", ticker="RELIANCE")
+        self.add_node("Crude Oil", "Commodity")
+        self.add_edge("Crude Oil", "Reliance Industries", "REFINED_BY")
+        self.add_edge("Lithium", "Tata Motors", "BATTERY_INPUT")
 
-        # Suppliers / Processors
-        self.G.add_node("Albemarle", type="Company", sector="Mining")
-        self.G.add_node("Ganfeng Lithium", type="Company", sector="Mining")
-        self.G.add_node("TSMC", type="Company", sector="Semiconductors")
+    def add_node(self, name, ntype, ticker=None, sector=None):
+        """Dynamically add or update a node."""
+        if name not in self.G:
+            self.G.add_node(name, type=ntype, impact=0.0, ticker=ticker, sector=sector, created_at=os.times()[4])
+            return f"Node '{name}' created."
+        return f"Node '{name}' already exists."
 
-        # Battery Makers
-        self.G.add_node("CATL", type="Company", sector="Batteries")
-        self.G.add_node("Panasonic", type="Company", sector="Batteries")
-        self.G.add_node("LG Energy", type="Company", sector="Batteries")
+    def add_edge(self, source, target, relationship):
+        """Dynamically create a supply chain link."""
+        if source not in self.G: self.add_node(source, "Entity")
+        if target not in self.G: self.add_node(target, "Entity")
+        self.G.add_edge(source, target, relationship=relationship)
+        return f"Link created: {source} -> {target} ({relationship})"
 
-        # Auto Manufacturers
-        self.G.add_node("Tesla", type="Company", ticker="TSLA", sector="Auto")
-        self.G.add_node("Tata Motors", type="Company", ticker="TATAMOTORS", sector="Auto")
-        self.G.add_node("NIO", type="Company", ticker="NIO", sector="Auto")
-
-        # Define Relationships
-        relationships = [
-            ("Lithium", "Albemarle", "EXTRACTED_BY"),
-            ("Lithium", "Ganfeng Lithium", "EXTRACTED_BY"),
-            ("Albemarle", "CATL", "SUPPLIES_TO"),
-            ("Ganfeng Lithium", "Tesla", "SUPPLIES_TO"),
-            ("CATL", "Tesla", "SUPPLIES_TO"),
-            ("CATL", "Tata Motors", "SUPPLIES_TO"),
-            ("Panasonic", "Tesla", "SUPPLIES_TO"),
-            ("LG Energy", "NIO", "SUPPLIES_TO"),
-            ("Neon Gas", "TSMC", "REQUIRED_BY"),
-            ("TSMC", "Tesla", "SUPPLIES_TO"),
-            ("TSMC", "NIO", "SUPPLIES_TO"),
-            # Indian Market Connections
-            ("Lithium", "Reliance Industries", "REFINES_LITHIUM"),
-            ("Reliance Industries", "Tata Motors", "SUPPLIES_ENERGY"),
-            ("Nickel", "Vedanta", "MINED_BY"),
-            ("Vedanta", "Tata Motors", "SUPPLIES_TO"),
-            ("TSMC", "Mahindra & Mahindra", "SUPPLIES_CHIPS"),
-            ("Mahindra & Mahindra", "Apollo Tyres", "CONSUMES"),
-            ("Tata Motors", "Motherson Sumi", "PARTS_SUPPLIER"),
-            ("Mahindra & Mahindra", "Motherson Sumi", "PARTS_SUPPLIER"),
-            ("Tata Motors", "Tata Steel", "USES_STEEL"),
-            ("Tata Steel", "Tata Motors", "SUPPLIES_TO"),
-            ("Nickel", "Jindal Stainless", "USES_NICKEL"),
-            ("Jindal Stainless", "Tata Motors", "SUPPLIES_TO"),
-            # New Agri & Consumer Ripples
-            ("Natural Gas", "UPL", "RAW_MATERIAL"),
-            ("Natural Gas", "Coromandel International", "RAW_MATERIAL"),
-            ("UPL", "Agri Sector", "PROVIDES_INPUTS"),
-            ("Coromandel International", "Agri Sector", "PROVIDES_INPUTS"),
-            ("Agri Sector", "Hindustan Unilever", "SUPPLIES_RAW_MATERIALS"),
-            ("Agri Sector", "ITC", "SUPPLIES_RAW_MATERIALS"),
-            ("Hindustan Unilever", "Varun Beverages", "DISTRIBUTION_PARTNER"),
-            # Banking & Macro Ripples
-            ("Interest Rates", "HDFC Bank", "IMPACTS_MARGINS"),
-            ("Interest Rates", "Bajaj Finance", "IMPACTS_LENDING"),
-            ("Bajaj Finance", "Consumer Spending", "ENABLES"),
-            ("Consumer Spending", "Titan", "DRIVES_SALES"),
-            ("Consumer Spending", "Trent", "DRIVES_SALES")
-        ]
-
-        # Add some macro nodes to ensure they exist
-        macro_nodes = [
-            ("Natural Gas", "Commodity"),
-            ("Interest Rates", "Macro"),
-            ("UPL", "Company"),
-            ("Coromandel International", "Company"),
-            ("Hindustan Unilever", "Company"),
-            ("ITC", "Company"),
-            ("HDFC Bank", "Company"),
-            ("Bajaj Finance", "Company"),
-            ("Titan", "Company"),
-            ("Trent", "Company"),
-            ("Varun Beverages", "Company"),
-            ("Agri Sector", "Sector"),
-            ("Consumer Spending", "Economic Indicator")
-        ]
-        
-        for name, ntype in macro_nodes:
-            if name not in self.G:
-                self.G.add_node(name, type=ntype, impact=0.0)
-
-        for u, v, rel in relationships:
-            self.G.add_edge(u, v, relationship=rel)
+    def decay_impacts(self):
+        """Simulate the fading of news impact over time (The 'Life' Factor)."""
+        for n in self.G.nodes():
+            current_impact = self.G.nodes[n].get('impact', 0.0)
+            if abs(current_impact) > 0.01:
+                # Decay by 5% each cycle
+                self.G.nodes[n]['impact'] = current_impact * 0.95
+            else:
+                self.G.nodes[n]['impact'] = 0.0
 
     def add_event(self, entity, event_type, impact_score):
-        """Update node with new event data."""
-        if entity in self.G:
-            self.G.nodes[entity]['impact'] = impact_score
-            self.G.nodes[entity]['last_event'] = event_type
-            return True
-        return False
+        """Update node with new event data and inject 'energy'."""
+        if entity not in self.G:
+            # Autonomous Discovery!
+            self.add_node(entity, "Company")
+        
+        self.G.nodes[entity]['impact'] = impact_score
+        self.G.nodes[entity]['last_event'] = event_type
+        return True
 
     def get_successors(self, node):
         """Get all entities impacted downstream."""

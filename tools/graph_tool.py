@@ -2,6 +2,25 @@ from crewai.tools import tool
 from database.graph import market_graph
 
 class GraphTools:
+    @tool("create_new_entity")
+    def create_new_entity(name: str, entity_type: str) -> str:
+        """
+        Registers a brand new company or commodity in the knowledge graph.
+        :param name: Name of the entity.
+        :param entity_type: 'Company', 'Commodity', or 'Sector'.
+        """
+        return market_graph.add_node(name, entity_type)
+
+    @tool("map_supply_chain_link")
+    def map_supply_chain_link(source: str, target: str, relationship: str) -> str:
+        """
+        Creates a new dependency between two entities.
+        :param source: The provider/input (e.g., 'Lithium').
+        :param target: The consumer/output (e.g., 'Tesla').
+        :param relationship: Type of link (e.g., 'SUPPLIES', 'COMPETITOR_OF').
+        """
+        return market_graph.add_edge(source, target, relationship)
+
     @tool("update_graph_node")
     def update_graph_node(entity: str, event_type: str, impact_score: float) -> str:
         """

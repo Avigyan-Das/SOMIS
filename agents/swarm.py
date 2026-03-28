@@ -8,38 +8,43 @@ import json
 class SomisSwarm:
     def __init__(self):
         # Initialize LLM (Picks up Groq if key present, else local)
-        self.llm = get_llm()
+        self.llm, self.engine_type = get_llm()
         
         # 1. The Harvester Agent (Data Intelligence)
         self.harvester = Agent(
             role='Financial Intelligence Specialist',
-            goal='Extract entities and market impact from the provided news text.',
+            goal='Extract entities and market impact from news text.',
             backstory="""You are a specialist in corporate intelligence. You parse news into clean summaries. 
-            You identify the primary company or commodity mentioned and assign a score (-1.0 to 1.0).""",
+            Identify the primary company or commodity mentioned and assign a score (-1.0 to 1.0).""",
             verbose=True,
             allow_delegation=False,
+            # Tools removed from Harvester to prevent cloud validation issues
             llm=self.llm
         )
 
         # 2. The Knowledge Graph Architect (Topology Master)
         self.architect = Agent(
             role='Supply Chain Architect',
-            goal='Identify immediate downstream companies or sectors affected by the news.',
-            backstory="""You are a supply chain expert. You map connections between global 
-            entities to identify 1st-order victims or beneficiaries.""",
+            goal='Map connections between global entities.',
+            backstory="""You are a supply chain expert. You identify who is directly 
+            connected to the affected entity (1st-order impact).""",
             verbose=True,
             allow_delegation=False,
+            # Tools assigned strictly to Architect for Graph work
+            tools=[GraphTools.update_graph_node, GraphTools.get_downstream_impact],
             llm=self.llm
         )
 
         # 3. The Ripple Agent (The Alpha Generator)
         self.ripple_agent = Agent(
             role='Second-Order Impact Analyst',
-            goal='Identify non-obvious 2nd-order trade opportunities and final tickers.',
+            goal='Identify non-obvious trade opportunities and final tickers.',
             backstory="""You are a master of indirect logic. You look for the "hidden" winners 
             that aren't mentioned in the news but are fundamentally affected. Always provide a reasoning chain.""",
             verbose=True,
             allow_delegation=False,
+            # Second order tool for the money-maker
+            tools=[GraphTools.get_second_order_impact],
             llm=self.llm
         )
 

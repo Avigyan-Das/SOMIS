@@ -287,13 +287,49 @@ const TacticalGraph = ({ nodes = [], edges = [] }) => {
           })}
           {activeNodes.map((node, i) => {
             const impactValue = node.impact || 0;
+            const absImpact = Math.abs(impactValue);
             const color = impactValue < 0 ? "#ef4444" : impactValue > 0 ? "#22c55e" : "#FFB000";
+            
+            // Living Graph: Pulse speed increases with impact
+            const pulseDuration = absImpact > 0.5 ? 0.8 : absImpact > 0 ? 2 : 4;
+            
             return (
               <motion.g key={`node-${i}`} initial={{ scale: 0 }} animate={{ scale: 1 }}>
-                <motion.circle cx={node.x} cy={node.y} r={impactValue !== 0 ? 15 : 8} fill={color} opacity={0.1} animate={impactValue !== 0 ? { scale: [1, 2, 1], opacity: [0.1, 0.5, 0.1] } : {}} transition={{ duration: 2, repeat: Infinity }} />
-                <circle cx={node.x} cy={node.y} r={5} fill={color} />
-                <text x={node.x + 12} y={node.y + 4} className="text-[10px] font-black fill-white pointer-events-none uppercase tracking-tighter" style={{ filter: 'drop-shadow(0 0 2px black)' }}>{node.id}</text>
-                {impactValue !== 0 && <text x={node.x + 12} y={node.y + 16} className="text-[8px] font-black fill-white opacity-80">{impactValue > 0 ? '+' : ''}{impactValue.toFixed(1)}</text>}
+                {/* Impact Glow */}
+                <motion.circle 
+                  cx={node.x} 
+                  cy={node.y} 
+                  r={15 + (absImpact * 20)} 
+                  fill={color} 
+                  initial={{ opacity: 0 }}
+                  animate={{ 
+                    opacity: [0.05, 0.2, 0.05],
+                    scale: [1, 1.2, 1]
+                  }} 
+                  transition={{ duration: pulseDuration, repeat: Infinity }} 
+                />
+                
+                {/* Core Node */}
+                <circle cx={node.x} cy={node.y} r={impactValue !== 0 ? 8 : 5} fill={color} className="filter drop-shadow-[0_0_8px_rgba(255,176,0,0.5)]" />
+                
+                <text 
+                  x={node.x + 12} 
+                  y={node.y + 4} 
+                  className="text-[10px] font-black fill-white pointer-events-none uppercase tracking-tighter" 
+                  style={{ filter: 'drop-shadow(0 0 2px black)' }}
+                >
+                  {node.id}
+                </text>
+                
+                {impactValue !== 0 && (
+                  <text 
+                    x={node.x + 12} 
+                    y={node.y + 16} 
+                    className={`text-[8px] font-black ${impactValue > 0 ? 'fill-green-400' : 'fill-red-400'}`}
+                  >
+                    {impactValue > 0 ? 'ALERT_UP' : 'ALERT_DOWN'} ({impactValue.toFixed(2)})
+                  </text>
+                )}
               </motion.g>
             );
           })}
